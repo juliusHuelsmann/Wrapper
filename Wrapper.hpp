@@ -1,5 +1,9 @@
+// Author:          Julius Hülsmann
+// Email:           juliusHuelsmann@gmail.com, julius.huelsmann@data-spree.com
+// Creation Date:   2018-10-12
+
 #ifndef _UTILS_WRAPPER_HPP_
-#ifndef _UTILS_WRAPPER_HPP_
+#define _UTILS_WRAPPER_HPP_
 
 #include <iostream>
 #include <exception>
@@ -10,11 +14,11 @@
  * Custom exception class to be called whenever the prefix function returns
  * that the execution has to be stopped.
  */
-class NotAuthroizedException: public std::exception {
+class NotAuthorizedException: public std::exception {
 
 public:
 
-  NotAuthroizedException(std::string custom="") {
+  NotAuthorizedException(std::string custom="") {
     this->custom = custom;
   }
 
@@ -24,17 +28,35 @@ public:
     ss << custom;
     return ss.str().c_str();
   }
+
 private:
+
   /**
- * Custom information on the exception.
- */
+   * Custom information on the exception.
+   */
   std::string custom;
 
 };
 
 
-namespace utils {
+namespace util {
   namespace wrapper {
+
+    template <class T, class Pre, class Suf> class Wrapper;
+
+    template <class T>
+    class Prefix{
+    public:
+
+      Prefix(T* value) {
+        this->value = value;
+      }
+
+      virtual bool call() = 0;
+
+    protected:
+      T* value;
+    };
 
     /**
      * Class used for calling user defined suffix.
@@ -77,7 +99,7 @@ namespace utils {
         /**
          * Wrapper is a friend class and thus can instantiate the suffix handler.
          */
-        template<class U, class S> friend class Wrapper;
+        template<class U, class S, class A> friend class Wrapper;
 
       public:
 
@@ -119,8 +141,8 @@ namespace utils {
      *                      succeeded by the code defined in #Suf
      * @tparam Suf          Suffix handle (see #T)
      */
-    //template <class T, class Pref, class Suf>
-    template <class T, class Suf> class Wrapper {
+    template <class T, class Pre, class Suf>
+    class Wrapper {
 
       public:
 
@@ -132,7 +154,8 @@ namespace utils {
          * @param su              #suffix
          */
         Wrapper (T& co, Suf su):
-          content(&co), owned(0), suffix(su) { }
+          content(&co), owned(0), prefix(&co), suffix(su) {
+        }
 
         /**
          * Constructor which takes the content as a pointer.
@@ -145,8 +168,8 @@ namespace utils {
          * @param memoryOwner     true by default, defines whether this Wrapper has
          *                        to deal with deleting the referenced #content.
          */
-        Wrapper(T* co, Suf su, bool memoryOwner=true):
-          content(co), owned(memoryOwner ? new int(1) : 0), suffix(su) {
+        Wrapper(T* co, Suf su, bool memoryOwner=true): content(co),
+           owned(memoryOwner ? new int(1) : 0), prefix(co), suffix(su) {
 
           }
 
@@ -154,8 +177,8 @@ namespace utils {
          * Overwrite copy constructor to increase the amount of owners in case the
          * deletion of the referenced #content is required by the user.
          */
-        Wrapper(const Wrapper& a):
-          content(a.content), owned(a.owned), suffix(a.suffix) {
+        Wrapper(const Wrapper& a): content(a.content),
+           owned(a.owned), prefix(a.prefix), suffix(a.suffix) {
             increaseOwned();
           }
 
@@ -169,6 +192,7 @@ namespace utils {
           decreaseOwned();
           content = a.content;
           owned = a.owned;
+          prefix = a.prefix;
           suffix = a.suffix;
           return *this;
         }
@@ -187,21 +211,17 @@ namespace utils {
          * @return
          */
         SuffixHandler<T,Suf> operator->() {
-          if (prefix()) return SuffixHandler<T, Suf>(content, suffix);
-          throw NotAuthroizedException();
+          if (prefix.call()) return SuffixHandler<T, Suf>(content, suffix);
+          throw NotAuthorizedException();
         }
 
       private:
 
         /**
-         * Virtual function that is to be implemented by the child class.
-         * @return whether the required rights for executing the command 
-         *         are granted.
+         * Element to be wrapped.
          */
-        virtual bool prefix() {
-          std::cout << "PRE";
-          return true;
-        }
+        T* content;
+
 
 
         /*
@@ -219,11 +239,6 @@ namespace utils {
         }
 
         /**
-         * Element to be wrapped.
-         */
-        T* content;
-
-        /**
          * Amount of owners if memory is managed by this, otherwise nullptr.
          */
         int* owned;
@@ -233,6 +248,14 @@ namespace utils {
          */
         Suf suffix;
 
+        /**
+         * User defined prefix which is a friend.
+         */
+        Pre prefix;
+        friend Pre;
+
     };
   }
 }
+
+#endif //_UTILS_WRAPPER_HPP_
