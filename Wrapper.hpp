@@ -8,6 +8,7 @@
 #include <iostream>
 #include <exception>
 #include <string>
+#include <sstream>
 
 
 /**
