@@ -2,8 +2,8 @@
 // Email:           juliusHuelsmann@gmail.com, julius.huelsmann@data-spree.com
 // Creation Date:   2018-10-12
 
-#ifndef _UTILS_WRAPPER_HPP_
-#define _UTILS_WRAPPER_HPP_
+#ifndef _WRAPPER_HPP_
+#define _WRAPPER_HPP_
 
 #include <iostream>
 #include <exception>
@@ -41,156 +41,160 @@ private:
 };
 
 
-namespace util {
-  namespace wrapper {
+namespace wrapper {
 
-    template <class T, class Ex> class Wrapper;
+  template <class T, class Ex> class Wrapper;
 
-    /**
-     * Abstract class that is to be implemented with custom #prefix, #suffix and
-     * #onDestroy functions for encapsulating funciton calls and livetime of
-     * a reference to a shielded object.
-     *
-     * @tparam T    object shielded by a #Wrapper.
-     */
-    template <class T>
+  /**
+   * Abstract class that is to be implemented with custom #prefix, #suffix and
+   * #onDestroy functions for encapsulating funciton calls and livetime of
+   * a reference to a shielded object.
+   *
+   * @tparam T    object shielded by a #Wrapper.
+   */
+  template <class T>
     class ExecutionHandler {
-    public:
-
-      /**
-       * Default constructor: save handle of content that is to be shielded for
-       * access to the #suffix and #prefix funcitons.
-       * @param value
-       */
-      ExecutionHandler(T* value) {
-        this->value = value;
-      }
-
-      virtual ~ExecutionHandler() { }
-
-      /**
-       * Executed prior to function call.
-       *
-       * @return    whether the function call is to be executed or an exception
-       *            is to be raised.
-       *
-       */
-      virtual bool prefix() = 0;
-
-      /**
-       * Executed after function call.
-       */
-      virtual void suffix() = 0;
-
-      /**
-       * Executed when the last reference to the attached wrapper of #content
-       * is lost (e.g. for deleting pointer).
-       */
-      virtual void onDestroy() = 0;
-
-      /**
-       * Can be invoked directly on the wrapper, referenced information does
-       * not have to be freed.
-       * @param information
-       */
-      virtual void notification(void* information) = 0;
-
-    protected:
-
-      /**
-       * Instance shielded by the wrapper.
-       */
-      T* value;
-    };
-
-    /**
-     * Responsible for calling Suffix after function call. Can only be
-     * instantiated by #Wrapper.
-     *
-     * @tparam T            The class of the instance that is wrapped by this.
-     *                      All function calls on that instance through the
-     *                      Wrapper are then preceded by prefix code  and
-     *                      succeeded by suffix code defined in an
-     *                      implementation of ExecutionHandler.
-     * @tparam Ex           ExecutionHandler handle (see #T)
-     */
-    template<class T, class Ex> class SuffixHandler {
-
-      private:
-        /**
-         * The actual of which all functions are to be preceeded by specified code.
-         */
-        T* content;
-
-        /**
-         * Boolean indicating whether the current call proxy is the last call proxy
-         * that deals with the content T*. Used as it might be the case (for
-         * compilers that optimize very poorly) that the SuffixHandler is instantiated
-         * twice for the same object.
-         */
-        mutable bool own;
-
-        /**
-         * The suffix that is to be called
-         */
-        Ex* prefix;
-
-        SuffixHandler(T* co, Ex* pr) : content(co), own(true) {
-          this->prefix = pr;
-        }
-
-        /**
-         * prevent assignment
-         */
-        SuffixHandler& operator=(const SuffixHandler&);
-
-        /**
-         * Wrapper is a friend class and thus can instantiate the suffix handler.
-         */
-        template<class U, class S> friend class Wrapper;
-
       public:
 
         /**
-         * Copy constructor; transfer ownership. Is most likely never called.
+         * Default constructor: save handle of content that is to be shielded for
+         * access to the #suffix and #prefix funcitons.
+         * @param value
          */
-        SuffixHandler(const SuffixHandler& a):
-          content(a.content), own(true) {
-            a.own = false;
-          }
+        ExecutionHandler(T* value) {
+          this->value = value;
+        }
+
+        virtual ~ExecutionHandler() { }
 
         /**
-         * Evoke #suffix  exactly once per function call.
+         * Executed prior to function call.
+         *
+         * @return    whether the function call is to be executed or an exception
+         *            is to be raised.
+         *
          */
-        ~SuffixHandler() { if (own) prefix->suffix(); }
+        virtual bool prefix() = 0;
 
         /**
-         * Expose the shielded object.
+         * Executed after function call.
          */
-        T* operator->() const { return content; }
+        virtual void suffix() = 0;
 
+        /**
+         * Executed when the last reference to the attached wrapper of #content
+         * is lost (e.g. for deleting pointer).
+         */
+        virtual void onDestroy() = 0;
 
+        /**
+         * Can be invoked directly on the wrapper, referenced information does
+         * not have to be freed.
+         * @param information
+         */
+        virtual void notification(void* information) = 0;
 
+      protected:
+
+        /**
+         * Instance shielded by the wrapper.
+         */
+        T* value;
     };
 
-    /**
-     * Issues a call to a user defined prefix - function for each function
-     * that is to be called on its content.
-     *
-     * Can be used for freeing the allocated memory when the last Wrapper
-     * instance responsible for the #content is destroyed.
-     *
-     * Creates an instance of #SuffixHandler for executing the suffix whenever a
-     * function was called.
-     *
-     * @tparam T            The class of the instance that is wrapped by this.
-     *                      All function calls on that instance through the
-     *                      Wrapper are then preceded by prefix code  and
-     *                      succeeded by suffix code defined in an
-     *                      implementation of ExecutionHandler.
-     * @tparam Ex           ExecutionHandler handle (see #T)
-     */
-    template <class T, class Ex>
+  /**
+   * Responsible for calling Suffix after function call. Can only be
+   * instantiated by #Wrapper.
+   *
+   * @tparam T            The class of the instance that is wrapped by this.
+   *                      All function calls on that instance through the
+   *                      Wrapper are then preceded by prefix code  and
+   *                      succeeded by suffix code defined in an
+   *                      implementation of ExecutionHandler.
+   * @tparam Ex           ExecutionHandler handle (see #T)
+   */
+  template<class T, class Ex> class SuffixHandler {
+
+    private:
+      /**
+       * The actual of which all functions are to be preceeded by specified code.
+       */
+      T* content;
+
+      /**
+       * Boolean indicating whether the current call proxy is the last call proxy
+       * that deals with the content T*. Used as it might be the case (for
+       * compilers that optimize very poorly) that the SuffixHandler is instantiated
+       * twice for the same object.
+       */
+      mutable bool own;
+
+      /**
+       * The suffix that is to be called
+       */
+      Ex* prefix;
+
+      SuffixHandler(T* co, Ex* pr) : content(co), own(true) {
+        this->prefix = pr;
+      }
+
+      /**
+       * prevent assignment
+       */
+      SuffixHandler& operator=(const SuffixHandler&);
+
+      /**
+       * Wrapper is a friend class and thus can instantiate the suffix handler.
+       */
+      template<class U, class S> friend class Wrapper;
+
+    public:
+
+      /**
+       * Copy constructor; transfer ownership. Is most likely never called.
+       */
+      SuffixHandler(const SuffixHandler& a):
+        content(a.content), own(true) {
+          a.own = false;
+        }
+
+      /**
+       * Evoke #suffix  exactly once per function call.
+       */
+      ~SuffixHandler() { if (own) prefix->suffix(); }
+
+      /**
+       * Expose the shielded object.
+       */
+      T* operator->() const {
+        //XXX: disassemble here for being able to provide the name of the
+        //     function that called  by storing the return register and
+        //     revisiting it later.
+        return content;
+      }
+
+
+
+  };
+
+  /**
+   * Issues a call to a user defined prefix - function for each function
+   * that is to be called on its content.
+   *
+   * Can be used for freeing the allocated memory when the last Wrapper
+   * instance responsible for the #content is destroyed.
+   *
+   * Creates an instance of #SuffixHandler for executing the suffix whenever a
+   * function was called.
+   *
+   * @tparam T            The class of the instance that is wrapped by this.
+   *                      All function calls on that instance through the
+   *                      Wrapper are then preceded by prefix code  and
+   *                      succeeded by suffix code defined in an
+   *                      implementation of ExecutionHandler.
+   * @tparam Ex           ExecutionHandler handle (see #T)
+   */
+  template <class T, class Ex>
     class Wrapper {
 
       public:
@@ -204,11 +208,11 @@ namespace util {
          */
         Wrapper (T& co, bool mm = false):
           content(&co), owned(new int(1)), prefix(&co), manageMemory(mm) {
-        }
+          }
         Wrapper (T& co, Ex* pr, bool mm=false):
           content(&co), owned(new int(1)), manageMemory(mm) {
-          prefix = pr;
-        }
+            prefix = pr;
+          }
 
 
         /**
@@ -222,10 +226,10 @@ namespace util {
          *                        to deal with deleting the referenced #content.
          */
         Wrapper(T* co, bool mm=true): content(co),
-           owned(new int(1)), prefix(&co), manageMemory(mm) {
-          }
+        owned(new int(1)), prefix(&co), manageMemory(mm) {
+        }
         Wrapper(T* co, Ex* pr, bool mm=true): content(co),
-           owned(new int(1)), manageMemory(mm) {
+        owned(new int(1)), manageMemory(mm) {
           prefix = pr;
         }
 
@@ -234,10 +238,10 @@ namespace util {
          * deletion of the referenced #content is required by the user.
          */
         Wrapper(const Wrapper& a): content(a.content), owned(a.owned),
-                                   prefix(a.prefix),
-                                   manageMemory(a.manageMemory) {
-            increaseOwned();
-          }
+        prefix(a.prefix),
+        manageMemory(a.manageMemory) {
+          increaseOwned();
+        }
 
         /**
          *
@@ -316,7 +320,6 @@ namespace util {
         bool manageMemory;
 
     };
-  }
 }
 
 #endif //_UTILS_WRAPPER_HPP_
