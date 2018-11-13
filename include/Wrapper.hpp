@@ -15,6 +15,23 @@
 #include <SuffixHandler.hpp>
 
 
+
+
+#define WRAPPER2_r(c, J) Wrapper<TYPE(c) >(c, new J<TYPE(c)>(c))
+#define WRAPPER2_p(c, J) Wrapper<TYPE(*c) >(c, new J<TYPE(*c)>(c))
+#define WRAPPER3_p(c, J, mm) Wrapper<typeof(*c)>(c, new J<typeof(*c)>(c), mm) 
+
+// 
+// marco for overloading  the wrapper macro function:
+// Works only for range of different amounts of variables (in this case 2-3)
+//
+// in case 2 arguments are provided to the function, wrapper 3 is stored in _3
+// and the function name is WRAPPER2.
+#define OVERLOAD(_1, _2, _3, NAME, ...) NAME
+#define WRAPPER(...) OVERLOAD(__VA_ARGS__, WRAPPER3_p, WRAPPER2_p)(__VA_ARGS__)
+
+
+
 namespace wrapper {
 
   /**
@@ -155,6 +172,9 @@ namespace wrapper {
 
 
   };
+
+
+
 }
 
 #endif //_WRAPPER_HPP_

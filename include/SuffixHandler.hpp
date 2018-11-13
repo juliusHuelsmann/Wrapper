@@ -10,8 +10,8 @@
 #include <string>
 #include <sstream>
 
-#include <include/exception/NotAuthorized.h>
-#include <include/executionHandler/ExecutionHandler.hpp>
+#include <exception/NotAuthorized.h>
+#include <executionHandler/ExecutionHandler.hpp>
 
 
 namespace wrapper {
