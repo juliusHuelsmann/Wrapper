@@ -45,27 +45,25 @@ namespace wrapper {
       /**
        * Evoke #suffix  exactly once per function call.
        */
-      ~SuffixHandler() { if (own) prefix->suffix(); }
+      virtual ~SuffixHandler() { if (own) prefix->suffix(); }
 
       /**
        * Expose the shielded object for the function call.
        *
-       * XXX: Provide the option to
-       * XXX: analyze call stack for finding out which function is going to be
-       *      called.
+       * XXX: Provide the option to analyze call stack for finding out 
+       *      which function is going to be called.
        */
       T* operator->() const {
-        //auto returnAddress = get_program_counter(0);
-        //std::cout << returnAddress << "\n"
+        // auto returnAddress = get_program_counter(0);
+        // std::cout << returnAddress << "\n"
 
-        // XXX: provide (optional) support for analyzing the call stack.
-        //XXX: 1. get program counter
-        //XXX: 2. get return address
-        //XXX: 3. print stack and save return address
-
-        //XXX: disassemble here for being able to provide the name of the
-        //     function that called  by storing the return register and
-        //     revisiting it later.
+        // This feature is be optional.
+        // 1. get program counter
+        // 2. get return address
+        // 3. print stack and save return address
+        // disassemble here for being able to provide the name of the
+        // function that called  by storing the return register and
+        // revisiting it later.
         return content;
       }
 
@@ -112,4 +110,4 @@ namespace wrapper {
   };
 }
 
-#endif //_UTILS_WRAPPER_HPP_
+#endif //_SUFFIX_HANDLER_

@@ -58,16 +58,18 @@ namespace wrapper {
        */
       virtual void suffix() {
 
-        // XXX: extract the function's name.
+        // XXX: When the stack analysis is enabled use it here.
         /*
-           void *array[10];
-           size_t size;
+         
+        void *array[10];
+        size_t size;
 
         // get void*'s for all entries on the stack
         size = backtrace(array, 10);
 
         // print out all the frames to stderr
         backtrace_symbols_fd(array, size, STDERR_FILENO);
+
         */
 
 
