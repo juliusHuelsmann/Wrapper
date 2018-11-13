@@ -1,7 +1,35 @@
 
 # Wrapper
-Neat Wrapper function written in C++ for preceding and suffixing the function calls to one instance, and thus guarding ownership restrictions.
+Neat Wrapper function written in C++ for preceding and suffixing the function 
+calls to one instance, and thus guarding ownership restrictions.
 
+## Use case 1) Access only by one thread at a time
+If only functions are exposed publicly, it is possible to implement the
+functions `prefix` and `suffix` to 
+`prefix`: 
+```c++
+std::stack<std::thread> waiting;  //< stack of threads waiting to execute a
+                                  //  funciton on the wrapped instance
+waiting.push(me)
+if (waiting.size())
+  // set me asleep
+```
+  
+`suffix`: 
+```c++
+if (waiting.size) {
+  auto next = waiting.pop();
+  // wake up next.
+}
+```
+
+
+
+
+## Use case 2) Single point of computation
+Restrict the ownership until the destruction of the wrapper by moving the code
+implemented in `suffix` to the destructor and passing the thread to be woken up
+next.
 
 Used in practice e.g. for controlling the access to an element which owership
 expires when a thread marks transfers the ownership back to the handler.
