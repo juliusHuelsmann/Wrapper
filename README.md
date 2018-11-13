@@ -3,7 +3,7 @@
 Neat Wrapper function written in C++ for preceding and suffixing the function calls to one instance, and thus guarding ownership restrictions.
 
 
-Used in practice e.g. for controlling the access to an element which owership
+Used in practice e.g. for controlling the access to an element which ownership
 expires when a thread marks transfers the ownership back to the handler.
 
 Wrapper is extended by the implementation of the `prefix` function.
