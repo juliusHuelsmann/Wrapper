@@ -5,8 +5,10 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
-#include <wrapper/Wrapper.hpp>
+#include <Wrapper.hpp>
 #include <node/Node.h>
+
+#include <mutex>
 
 namespace wrapper {
 
@@ -26,8 +28,8 @@ namespace wrapper {
          * Create new session.
          * @return
          */
-        static Wrapper<T, Session> createSession(T* content, bool handleMemory=false) {
-            return Wrapper<T, Session> (content, new Session(node), handleMemory);
+        static Wrapper<T> createSession(T* content, bool handleMemory=false) {
+            return Wrapper<T> (content, new Session(content), handleMemory);
         }
 
         /**
