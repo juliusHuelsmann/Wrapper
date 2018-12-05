@@ -127,6 +127,10 @@ namespace wrapper {
         if (prefix->prefix()) return SuffixHandler<T>(content, prefix);
         throw exception::NotAuthorized();
       }
+  public:
+      ExecutionHandler<T>* executionHandler() {
+          return prefix;
+      }
 
     private:
 
