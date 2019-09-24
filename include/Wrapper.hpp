@@ -120,11 +120,17 @@ public:
    * Executes #prefix prefix and suffix
    * @return
    */
-  SuffixHandler<T> operator->() {
-    if (prefix->prefix())
+  SuffixHandler<T> operator->() noexcept {
+    if (prefix->prefix()) {
       return SuffixHandler<T>(content, prefix);
-    throw exception::NotAuthorized();
+    }
+
+    std::cout << "Not authorized\n";
+    std::terminate();
+    //throw exception::NotAuthorized();
   }
+
+  inline T *get() noexcept { return content; }
 
 public:
   ExecutionHandler<T> *executionHandler() { return prefix; }
