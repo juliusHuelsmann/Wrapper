@@ -23,7 +23,7 @@ namespace wrapper {
        * access to the #suffix and #prefix functions.
        * @param value
        */
-      explicit ExecutionHandler(T* _content) : content(_content) { }
+      explicit ExecutionHandler(T *_content) : content(_content) { }
       virtual ~ExecutionHandler() = default;
 
       /**
@@ -51,7 +51,7 @@ namespace wrapper {
       /**
        * Instance shielded by the wrapper.
        */
-      T* content;
+      T *content;
   };
 
 }
