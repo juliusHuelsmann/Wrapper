@@ -68,7 +68,8 @@ public:
    */
   explicit Wrapper(T &co, ExecutionHandler<T> *pr, bool manageExHandlerDel = true)
       : content(&co), owned(new int(1)), manageMemory(false),
-        manageExHandlerDel(manageExHandlerDel), prefix(pr) {}
+        manageExHandlerDel(manageExHandlerDel), prefix(pr) {
+  }
 
   /**
    * Constructor which takes the content as a pointer.
@@ -82,7 +83,8 @@ public:
    */
   explicit Wrapper(T *co, ExecutionHandler<T> *pr, bool mm = true, bool manageExHandlerDel = true)
       : content(co), owned(new int(1)), manageMemory(mm), manageExHandlerDel(manageExHandlerDel),
-        prefix(pr) {}
+        prefix(pr) {
+  }
 
   /**
    * Overwrite copy constructor to increase the amount of owners in case the
@@ -114,7 +116,9 @@ public:
    * Destructor: decrease the owner counter in case the memory is to be managed
    * by the wrapper.
    */
-  ~Wrapper() { decreaseOwned(); }
+  ~Wrapper() { 
+    decreaseOwned(); 
+  }
 
   /**
    * Executes #prefix prefix and suffix

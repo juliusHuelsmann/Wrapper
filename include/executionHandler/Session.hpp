@@ -90,6 +90,15 @@ public:
   }
 };
 
+
+template <typename T> struct Ptr {
+  template <typename... Prs> static Wrapper<T> createSession(Prs &... p) {
+    auto content = new T(p...);
+    return Wrapper<T>(content, new Session(content), true, true);
+  }
+};
+
+
 } // namespace wrapper
 
 #endif //_SESSION_H_
