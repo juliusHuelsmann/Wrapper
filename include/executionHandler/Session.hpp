@@ -7,11 +7,15 @@
 
 #include <Wrapper.hpp>
 
+#include <RecursiveMutex.hpp>
+#include <RMWrap.hpp>
+
 #include <mutex>
+#include <atomic>
+#include <cassert>
 
 
 namespace wrapper {
-
 
 
 /**
@@ -57,7 +61,7 @@ public:
   /// Helper functions with prettier names
   virtual inline void lock() noexcept { prefix(); }
 
-  virtual inline std::recursive_mutex &getMutex() noexcept { return mutex; }
+  virtual inline rcv::recursive_mutex &getMutex() noexcept { return mutex; }
 
 
   /**
@@ -70,7 +74,7 @@ private:
   /**
    * Mutex on the element.
    */
-  std::recursive_mutex mutex;
+  rcv::recursive_mutex mutex;
 };
 
 
