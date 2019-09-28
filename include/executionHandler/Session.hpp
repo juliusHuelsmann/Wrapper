@@ -9,6 +9,7 @@
 
 #include <mutex>
 
+
 namespace wrapper {
 
 
@@ -27,8 +28,8 @@ public:
    * Create new session.
    * @return
    */
-  static Wrapper<T> createSession(T *content, bool handleMemory = false) {
-    return Wrapper<T>(content, new Session(content), handleMemory);
+  static Wrapper<T, Session<T>> createSession(T *content, bool handleMemory = false) {
+    return Wrapper<T, Session<T>>(content, new Session(content), handleMemory);
   }
 
   /**
@@ -38,7 +39,7 @@ public:
    * @return  whether the access rights are currently belonging to the
    *          thread that is currently executing or not.
    */
-  virtual bool prefix() {
+  virtual inline bool prefix() noexcept {
     mutex.lock();
     return true;
   }
@@ -47,7 +48,17 @@ public:
    * Manages access rights, executed prior to any function call to the
    * object.
    */
-  virtual void suffix() { mutex.unlock(); }
+  virtual inline void suffix() noexcept { mutex.unlock(); }
+
+
+  /// Helper functions with prettier names
+  virtual inline void unlock() noexcept { suffix(); }
+  
+  /// Helper functions with prettier names
+  virtual inline void lock() noexcept { prefix(); }
+
+  virtual inline std::recursive_mutex &getMutex() noexcept { return mutex; }
+
 
   /**
    * Code to be executed when the last reference to the #Node_session is
@@ -84,21 +95,26 @@ template <class T> class OwningSession final : private T, public Session<T> {
 public:
   template <typename... Prs> OwningSession(Prs &... p) : T(p...), Session<T>(this) {}
 
-  template <typename... Prs> static Wrapper<T> createSession(Prs &... p) {
+  template <typename... Prs> static Wrapper<T, OwningSession> createSession(Prs &... p) {
     auto const os = new OwningSession(p...);
-    return Wrapper<T>(os, os, false, false);
+    return Wrapper<T, OwningSession>(os, os, false, false);
   }
 };
 
 
 template <typename T> struct Ptr {
-  template <typename... Prs> static Wrapper<T> createSession(Prs &... p) {
+  template <typename... Prs> static Wrapper<T, Session<T>> createSession(Prs &... p) {
     auto content = new T(p...);
-    return Wrapper<T>(content, new Session(content), true, true);
+    return Wrapper<T, Session<T>>(content, new Session(content), true, true);
   }
 };
 
 
 } // namespace wrapper
+
+template <typename T> struct SessionWrapper {
+  using type = wrapper::Wrapper<T, wrapper::Session<T>>;
+};
+
 
 #endif //_SESSION_H_

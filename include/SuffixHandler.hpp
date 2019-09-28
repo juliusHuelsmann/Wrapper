@@ -16,97 +16,98 @@
 
 namespace wrapper {
 
-  template <class T> class Wrapper;
+  template <class T, typename Suff>
+    //, std::enable_if_t<std::is_base_of_v<ExecutionHandler, Suff>> *>
+             class Wrapper;
 
+/**
+ * Used by the Wrapper.
+ * Responsible for calling Suffix after function call. Can only be
+ * instantiated by #Wrapper.
+ *
+ * @tparam T            The class of the instance that is wrapped by this.
+ *                      All function calls on that instance through the
+ *                      Wrapper are then preceded by prefix code  and
+ *                      succeeded by suffix code defined in an
+ *                      implementation of ExecutionHandler.
+ */
+template <class T, typename U> class SuffixHandler {
+
+public:
+  /**
+   * Copy constructor; transfer ownership. Is never called most likely, only
+   * if a compiler is used that does not optimize at all.
+   */
+  SuffixHandler(const SuffixHandler &a) : content(a.content), own(true) { a.own = false; }
 
   /**
-   * Used by the Wrapper.
-   * Responsible for calling Suffix after function call. Can only be
-   * instantiated by #Wrapper.
-   *
-   * @tparam T            The class of the instance that is wrapped by this.
-   *                      All function calls on that instance through the
-   *                      Wrapper are then preceded by prefix code  and
-   *                      succeeded by suffix code defined in an
-   *                      implementation of ExecutionHandler.
+   * Evoke #suffix  exactly once per function call.
    */
-  template<class T> class SuffixHandler {
+  virtual ~SuffixHandler() {
+    if (own)
+      prefix->suffix();
+  }
 
-    public:
+  /**
+   * Expose the shielded object for the function call.
+   *
+   * XXX: Provide the option to analyze call stack for finding out
+   *      which function is going to be called.
+   */
+  T *operator->() const {
+    // auto returnAddress = get_program_counter(0);
+    // std::cout << returnAddress << "\n"
 
-      /**
-       * Copy constructor; transfer ownership. Is never called most likely, only
-       * if a compiler is used that does not optimize at all.
-       */
-      SuffixHandler(const SuffixHandler& a): content(a.content), own(true) {
-        a.own = false;
-      }
+    // This feature is be optional.
+    // 1. get program counter
+    // 2. get return address
+    // 3. print stack and save return address
+    // disassemble here for being able to provide the name of the
+    // function that called  by storing the return register and
+    // revisiting it later.
+    return content;
+  }
 
-      /**
-       * Evoke #suffix  exactly once per function call.
-       */
-      virtual ~SuffixHandler() { if (own) prefix->suffix(); }
+private:
+  /**
+   * The actual of which all functions are to be preceded by specified code.
+   */
+  T *content;
 
-      /**
-       * Expose the shielded object for the function call.
-       *
-       * XXX: Provide the option to analyze call stack for finding out 
-       *      which function is going to be called.
-       */
-      T* operator->() const {
-        // auto returnAddress = get_program_counter(0);
-        // std::cout << returnAddress << "\n"
+  /**
+   * Boolean indicating whether the current call proxy is the last call
+   * proxy * that deals with the content T*.
+   * Used as it might be the case (for compilers that optimize very poorly)
+   * that the SuffixHandler is instantiated twice for the same object.
+   */
+  mutable bool own;
 
-        // This feature is be optional.
-        // 1. get program counter
-        // 2. get return address
-        // 3. print stack and save return address
-        // disassemble here for being able to provide the name of the
-        // function that called  by storing the return register and
-        // revisiting it later.
-        return content;
-      }
+  /**
+   * The suffix that is to be called
+   */
+  ExecutionHandler<T> *prefix;
 
-    private:
+  /**
+   * Constructor that is only available to the Wrapper.
+   * @param co      content that is shielded by the wrapper.
+   * @param pr      ExecutionHandler that contains the `suffix` and
+   *                `onDelete` functions.
+   */
+  SuffixHandler(T *co, ExecutionHandler<T> *pr) : content(co), own(true), prefix(pr) {}
 
-      /**
-       * The actual of which all functions are to be preceded by specified code.
-       */
-      T* content;
+  /**
+   * prevent assignment.
+   */
+  SuffixHandler &operator=(SuffixHandler const &) = delete;
+  SuffixHandler &operator=(SuffixHandler const &&) = delete;
+  SuffixHandler &operator=(SuffixHandler &&) = delete;
 
-      /**
-       * Boolean indicating whether the current call proxy is the last call
-       * proxy * that deals with the content T*.
-       * Used as it might be the case (for compilers that optimize very poorly)
-       * that the SuffixHandler is instantiated twice for the same object.
-       */
-      mutable bool own;
-
-      /**
-       * The suffix that is to be called
-       */
-      ExecutionHandler<T>* prefix;
-
-      /**
-       * Constructor that is only available to the Wrapper.
-       * @param co      content that is shielded by the wrapper.
-       * @param pr      ExecutionHandler that contains the `suffix` and
-       *                `onDelete` functions.
-       */
-      SuffixHandler(T* co, ExecutionHandler<T>* pr):
-        content(co), own(true), prefix(pr) { }
-
-      /**
-       * prevent assignment.
-       */
-      SuffixHandler& operator=(SuffixHandler const& ) = delete;
-      SuffixHandler& operator=(SuffixHandler const &&) = delete;
-      SuffixHandler& operator=(SuffixHandler &&) = delete;
-
-      /**
-       * Wrapper is a friend class and thus can instantiate the suffix handler.
-       */
-      template<class U> friend class Wrapper;
+  /**
+   * Wrapper is a friend class and thus can instantiate the suffix handler.
+   */
+  //template <class U, class V, nullptr> friend class Wrapper;
+  //template <class U> friend class Wrapper<U, SuffixHandler<U>, nullptr>;
+  friend class Wrapper<T, U>;
   };
 }
 

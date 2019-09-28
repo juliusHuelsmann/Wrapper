@@ -9,6 +9,7 @@
 #include <exception>
 #include <string>
 #include <sstream>
+#include <type_traits>
 
 #include <exception/NotAuthorized.h>
 #include <executionHandler/ExecutionHandler.hpp>
@@ -31,6 +32,7 @@
 #define WRAPPER(...) OVERLOAD(__VA_ARGS__, WRAPPER3_p, WRAPPER2_p)(__VA_ARGS__)
 
 namespace wrapper {
+
 
 /**
  * <brief>
@@ -57,7 +59,10 @@ namespace wrapper {
  *                      succeeded by suffix code defined in an
  *                      implementation of ExecutionHandler.
  */
-template <class T> class Wrapper {
+template <class T, typename Suff>
+  //, std::enable_if_t<std::is_base_of_v<ExecutionHandler, Suff>> * = nullptr>
+class Wrapper {
+  static_assert(std::is_base_of_v<ExecutionHandler<T>, Suff>, "Suff has to be base");
 
 public:
   /**
@@ -66,7 +71,7 @@ public:
    *
    * @param co              #content
    */
-  explicit Wrapper(T &co, ExecutionHandler<T> *pr, bool manageExHandlerDel = true)
+  explicit Wrapper(T &co, Suff *pr, bool manageExHandlerDel = true)
       : content(&co), owned(new int(1)), manageMemory(false),
         manageExHandlerDel(manageExHandlerDel), prefix(pr) {
   }
@@ -81,7 +86,7 @@ public:
    *                defines whether this Wrapper has to deal with
    *                deleting the referenced #content.
    */
-  explicit Wrapper(T *co, ExecutionHandler<T> *pr, bool mm = true, bool manageExHandlerDel = true)
+  explicit Wrapper(T *co, Suff *pr, bool mm = true, bool manageExHandlerDel = true)
       : content(co), owned(new int(1)), manageMemory(mm), manageExHandlerDel(manageExHandlerDel),
         prefix(pr) {
   }
@@ -124,9 +129,9 @@ public:
    * Executes #prefix prefix and suffix
    * @return
    */
-  SuffixHandler<T> operator->() noexcept {
+  SuffixHandler<T, Suff> operator->() noexcept {
     if (prefix->prefix()) {
-      return SuffixHandler<T>(content, prefix);
+      return SuffixHandler<T, Suff>(content, prefix);
     }
 
     std::cout << "Not authorized\n";
@@ -137,7 +142,8 @@ public:
   inline T *get() noexcept { return content; }
 
 public:
-  ExecutionHandler<T> *executionHandler() { return prefix; }
+  Suff *executionHandler() { return prefix; }
+  //ExecutionHandler<T> *executionHandler() { return prefix; }
 
 private:
   /*
@@ -182,11 +188,10 @@ private:
   /**
    * User defined prefix which is a friend.
    */
-  ExecutionHandler<T> *prefix;
+  //ExecutionHandler<T> *prefix;
+  Suff *prefix;
+};
 
-
-  };
-
-  } // namespace wrapper
+} // namespace wrapper
 
 #endif //_WRAPPER_HPP_
