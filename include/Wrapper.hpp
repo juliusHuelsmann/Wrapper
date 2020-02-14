@@ -107,13 +107,15 @@ public:
    * @return
    */
   Wrapper &operator=(const Wrapper &a) {
-    a.increaseOwned();
-    decreaseOwned();
-    content = a.content;
-    owned = a.owned;
-    manageMemory = a.manageMemory;
-    manageExHandlerDel = a.manageExHandlerDel;
-    prefix = a.prefix;
+    if (this != &a) { // not strictly required here.
+      a.increaseOwned();
+      decreaseOwned();
+      content = a.content;
+      owned = a.owned;
+      manageMemory = a.manageMemory;
+      manageExHandlerDel = a.manageExHandlerDel;
+      prefix = a.prefix;
+    }
     return *this;
   }
 
