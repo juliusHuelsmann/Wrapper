@@ -9,6 +9,6 @@ wrapper::exception::NotAuthorized::NotAuthorized(const std::string& custom) noex
   msg("Thread usage session expired!\n" + custom + "\n") { }
 
 const char* wrapper::exception::NotAuthorized::what() const throw() {
-  (void) this->what();
+  //(void) this->what();
   return msg.c_str();
 }
